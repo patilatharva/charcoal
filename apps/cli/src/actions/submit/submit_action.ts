@@ -145,12 +145,16 @@ export async function submitAction(
   }
 
   context.splog.info(
-    chalk.blueBright('\n🌳 Updating dependency trees in PR bodies...')
+    chalk.blueBright('\n✨ Updating dependency stacks in PR bodies...')
   );
 
   for (const branch of branchNames) {
     const prInfo = context.engine.getPrInfo(branch);
     const footer = createPrBodyFooter(context, branch);
+
+    context.splog.info(
+      chalk.yellow('\n\n', JSON.stringify(footer, null, 4), '\n\n')
+    );
 
     if (!prInfo) {
       throw new Error(`PR info is undefined for branch ${branch}`);
@@ -189,10 +193,14 @@ export function updatePrBodyFooter(
   }
 
   const regex = new RegExp(
-    `${footerTitle}[\\s\\S]*${footerFooter.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      '\\$&'
-    )}`
+    // String value of the footer title, allowing for any surrounding whitespace.
+    `\\s*${footerTitle.trim()}\\s*` +
+      // Any characters in between.
+      `[\\s\\S]*` +
+      // String value of the footer footer ("This tree was auto-generated
+      // by...") with any special characters escaped + allowing for any
+      // surrounding whitespace.
+      `\\s*${footerFooter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim()}\\s*`
   );
 
   const updatedBody = body.replace(regex, footer);
